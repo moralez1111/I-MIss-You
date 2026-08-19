@@ -1,14 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>Untitled</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="/style.css">
-  </head>
-
-  <body>
-    <!DOCTYPE html>
 <html lang="ka">
 <head>
   <meta charset="UTF-8">
@@ -50,9 +40,20 @@
   </div>
 
   <script src="script.js"></script>
-</body>
-</html>
-    <script src="/script.js"></script>
-  </body>
 
+  <!-- Love Modal Popup with Range Bar -->
+<div id="love-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>How Much Do You Miss Me? 🥺💜</h2>
+    
+    <div class="slider-container">
+      <input type="range" id="miss-slider" min="0" max="100" value="50" class="love-slider">
+      <div id="slider-value" class="slider-value-text">50%</div>
+    </div>
+
+    <button id="slider-submit-btn" class="modal-btn" onclick="submitSliderAnswer()">Send Love 💖</button>
+    <div id="modal-response" class="modal-response"></div>
+  </div>
+</div>
+</body>
 </html>
