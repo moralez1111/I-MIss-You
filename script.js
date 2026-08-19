@@ -1,25 +1,23 @@
 // ზუსტი რიცხვების მიმდევრობა ზრდისას
 const batterySteps = [1, 7, 11, 16, 21, 38, 45, 53, 63, 73, 77, 85, 91, 99, 100];
-let stepIndex = 0; // მიმდინარე ინდექსი ზრდის მასივში
-let currentPercent = 1; // მიმდინარე ზუსტი პროცენტი
+let stepIndex = 0; 
+let currentPercent = 1; 
 let drainInterval = null;
+let hasBeenPressed = false; 
+let modalTriggered = false; // თრექინგი 100%-ზე პოპაპისთვის
 
-// ====================================================
-// აქ შეგიძლიათ დაამატო / შეცვალო სასურველი ტექსტები:
-// ====================================================
 const customTexts = [
   "You Bring Me Happiness! ✨",
   "I Love Listening To You! 🎧",
   "I Wanna Hug & Kiss You! 🧸",
   "I Miss You So Muuch! 🥰",
   "Can't Wait To See You! 💜",
-  "Thinking of you every second of the day 💭"
+  "Thinking of you every second of the day 💭",
   "I Love You The Most! 💜"
 ];
 
-let textIndex = 0; // ტექსტების მიმდინარე ინდექსი
+let textIndex = 0; 
 
-// ეკრანის და ტექსტების განახლება
 function updateUI() {
   const fill = document.getElementById('battery-fill');
   const text = document.getElementById('battery-text');
@@ -29,7 +27,6 @@ function updateUI() {
   text.innerText = currentPercent + '%';
   fill.style.width = Math.min(currentPercent, 100) + '%';
 
-  // დინამიური სტატუსი პროცენტის მიხედვით
   if (currentPercent < 20) {
     status.innerText = "Battery Low! Tap to charge my heart 🥺";
   } else if (currentPercent < 50) {
@@ -42,13 +39,16 @@ function updateUI() {
     status.innerText = "Who am I kidding? I love you so much, it's never enough.♾️💜";
   }
 
-  // ქვედა ტექსტი იცვლება customTexts მასივიდან
-  reasonDisplay.innerText = customTexts[textIndex];
+  if (hasBeenPressed) {
+    reasonDisplay.innerText = customTexts[textIndex];
+    reasonDisplay.style.opacity = "1";
+  } else {
+    reasonDisplay.innerText = "";
+    reasonDisplay.style.opacity = "0";
+  }
 }
 
-// ბატარიაზე დაჭერის ფუნქცია
 function tapBattery() {
-  // 1. პროცენტის ზრდა
   if (stepIndex < batterySteps.length - 1) {
     stepIndex++;
     currentPercent = batterySteps[stepIndex];
@@ -56,19 +56,30 @@ function tapBattery() {
     currentPercent += 10;
   }
   
-  // 2. ტექსტის გადართვა შემდეგზე (წრიულად)
-  textIndex = (textIndex + 1) % customTexts.length;
+  if (!hasBeenPressed) {
+    hasBeenPressed = true;
+    textIndex = 0;
+  } else {
+    textIndex = (textIndex + 1) % customTexts.length;
+  }
 
   updateUI();
-  resetDrainTimer(); // დაჭერისას ტაიმერი რესტარტდება
+  resetDrainTimer();
+
+  // 100%-ის მიღწევისას პოპაპის ამოხტომა
+  if (currentPercent >= 100 && !modalTriggered) {
+    modalTriggered = true;
+    setTimeout(() => {
+      document.getElementById('love-modal').classList.remove('hidden');
+    }, 400);
+  }
 }
 
-// ავტომატური დაკლების ტაიმერი (-1% ყოველ 2.5 წამში)
 function startDrainTimer() {
   if (drainInterval) clearInterval(drainInterval);
   drainInterval = setInterval(() => {
     if (currentPercent > 1) {
-      currentPercent--; // ჩამოაკლდეს 1-ით
+      currentPercent--;
       
       while (stepIndex > 0 && currentPercent < batterySteps[stepIndex]) {
         stepIndex--;
@@ -83,13 +94,12 @@ function resetDrainTimer() {
   startDrainTimer();
 }
 
-// ინიციალიზაცია
 document.getElementById('battery-btn').addEventListener('click', tapBattery);
 updateUI();
 startDrainTimer();
 
 // ----------------------------------------------------
-// ემოჯების სისტემა (ფონური + კლიკის ეფექტი)
+// ემოჯების სისტემა
 // ----------------------------------------------------
 const canvas = document.getElementById('emoji-canvas');
 const ctx = canvas.getContext('2d');
@@ -104,7 +114,6 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// 1. ფონური ნელი ემოჯები
 class BgParticle {
   constructor() {
     this.reset();
@@ -137,7 +146,6 @@ class BgParticle {
   }
 }
 
-// 2. კლიკის დროს ამოხტომადი ემოჯები
 class ClickParticle {
   constructor(x, y) {
     this.x = x;
@@ -167,19 +175,16 @@ class ClickParticle {
   }
 }
 
-// ეკრანზე კლიკისას ემოჯების გაჩენა
 window.addEventListener('click', (e) => {
   for (let i = 0; i < 6; i++) {
     clickParticles.push(new ClickParticle(e.clientX, e.clientY));
   }
 });
 
-// ფონური ემოჯების შექმნა
 for (let i = 0; i < 18; i++) {
   bgParticles.push(new BgParticle());
 }
 
-// ანიმაციის ციკლი
 function animateParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -200,3 +205,45 @@ function animateParticles() {
 }
 
 animateParticles();
+
+// ----------------------------------------------------
+// Slider Logic
+// ----------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const missSlider = document.getElementById('miss-slider');
+  const sliderValue = document.getElementById('slider-value');
+
+  if (missSlider) {
+    missSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (val == 100) {
+        sliderValue.innerText = "100000% ♾️💜";
+      } else {
+        sliderValue.innerText = val + "%";
+      }
+    });
+  }
+});
+
+function submitSliderAnswer() {
+  const slider = document.getElementById('miss-slider');
+  const responseDiv = document.getElementById('modal-response');
+  const val = Number(slider.value);
+
+  if (val < 100) {
+    // Stays open and shows sad response
+    responseDiv.innerText = `Only ${val}%? I expected more... 🥺💔`;
+  } else {
+    // Maximum response + Emoji explosion + Closes
+    responseDiv.innerText = "I knew it! I miss you 100000% too! 🥰💜";
+    
+    for (let i = 0; i < 30; i++) {
+      clickParticles.push(new ClickParticle(window.innerWidth / 2, window.innerHeight / 2));
+    }
+
+    setTimeout(() => {
+      document.getElementById('love-modal').classList.add('hidden');
+      responseDiv.innerText = "";
+    }, 2200);
+  }
+}
